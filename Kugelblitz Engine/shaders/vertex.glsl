@@ -1,13 +1,9 @@
-// VERTEX SHADER
-
-// State the  OpenGL version (3.3)
 #version 330 core
-
-// in keyword indicates input of vertex attributes, we only leed a single one which is for the position, it gets inputed to aPos
-// GLSL has vector datatype, we're in 3d so using vec3 (which has three values)
-layout (location = 0) in vec3 aPos;
-
-void main ()
+layout (location = 0) in vec3 aPos; // the position variable has attribute position 0
+layout (location = 1) in vec3 aColor; // the color variable has attribute position 1
+out vec3 ourColor; // output a color to the fragment shader
+void main()
 {
-	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+	gl_Position = vec4(aPos, 1.0);
+	ourColor = aColor; // set ourColor to the input color we got from the vertex data
 }

@@ -1,200 +1,201 @@
 /*
-	Kugelblitz Engine:
-		To Do:
-			- Switch to SDL
-				~ Clean the main function up, many GLFW functions HAVE to be called from the main thread, SDL not so
-		License:
-
-			Copyright 2017 Eric Bormann
-
-			Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, 
-			including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
-			subject to the following conditions:
-
-			The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-			THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-			IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
-			SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+TODO:
+	Output format:
+	[21:16:55 INFO]
 */
 
+// Only have this file once
 #pragma once
-// Import the proper libraries, ensure that GLAD is imported prior to GLFW
+
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+// Include needed stuff
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "stb_image.h""
 
+#include "shader.h"
+
+#include <windows.h>
 #include <iostream>
+#include <ctime>
 
-// define RELEASE/DEBUG depending on build type, this saves us log time
-#define DEBUG
-
-#ifdef DEBUG
-// Only log errors if in DEBUG
-#define LOG(x) std::cout << x << std::endl
-#endif // DEBUG
-
-#ifdef RELEASE
-// Only log errors if in DEBUG
-#define LOG(x)
-#endif // RELEASE
-
-
-
-// Indicate that these functions exist, for window resizing callback and processing keyboard input
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
-void windowContext();
-const char *vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"void main()\n"
-"{\n"
-"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"}\0";
 
-const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-	"}\n\0";
-
-// Screen size variables
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
-int main()
-{
-#pragma region Init
-	// Removes the consoles
-	// FreeConsole();
+double seconds;
+bool debug;
+time_t start;
+time_t end;
 
-	// Console input
-	// std::string consoleInput;
+// Takes in launch options, useful for debugging
+int main(int argc, char *argv[])
+{
+	struct tm *theTime;
+	time_t tim;
+	time(&tim);
+	theTime = localtime(&tim);
+	int hours = theTime->tm_hour;
+
+	time(&start);  /* get current time; same as: timer = time(NULL)  */
+	// Check if debug is enabled
+	for (int i = 0; i < argc; i++) {
+		if ((std::string) argv[i] == "-debug")
+		{
+			std::cout << "INFO: Debug enabled, all information will be printed to this console\nINFO: ERROR indicates fatal error, and the application will terminate\nINFO: INFO indicates useful information or non-fatal errors\nINFO: SUCCESS indicates no fatal errors occurred for that process" << std::endl;
+			debug = true;
+			std::string str = "Kugelblitz Engine Console";
+			SetConsoleTitle(str.c_str());
+			printf("INFO: argv[%d]: %s\n", i, argv[i]);
+		}
+	}
+	if (debug == false) {
+		FreeConsole();
+	}
 
 	// Initialize GLFW
 	glfwInit();
-	// Tell GLFW our OpenGL version "3.3"
-	windowContext();
+	// Tell GLFW our OpenGL Version (3.3) 
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	// Tell GLFW our OpenGL Profile (Core)
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	// Create the GLFW window
+	// Create the window
 	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Kugelblitz Engine", NULL, NULL);
-
-	// Check if the window was not created, and output an error if there was
+	
+	// Check if the window failed to create
 	if (window == NULL)
 	{
-		LOG("ERROR: Failed to create GLFW window");
+		glfwTerminate();
+		return -1;
+	} else if (window == NULL && debug == true) {
+		// Output the GLFW error, and terminate the program
+		std::cout << "ERROR: Failed to create GLFW window" << std::endl;
 		glfwTerminate();
 		std::cin.get();
 		return -1;
+	} else {
+		std::cout << "SUCCESS: GLFW window created" << std::endl;
 	}
-	else {
-		LOG("SUCCESS: Created GLFW window");
-	}
-
 	// Make the OpenGL context the current window
 	glfwMakeContextCurrent(window);
-	// Tell GLFW that if there is a resize, call the function framebufferSizeCallback	MUST BE CALLED IN MAIN
+	// Tell OpenGL our function to call when the window is resized
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-	// GLAD loads the OpenGL function pointers (OS-specific) and GLFW tells us the glfwGetProcAddress to get the correct function for the OS we're compiling on (Windows 10)
-
+	// GLAD: load all OpenGL function pointers
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
-		LOG("ERROR: Failed to initialize GLAD");
+		std::cout << "ERROR: Failed to initialize GLAD" << std::endl;
 		std::cin.get();
 		return -1;
-	}
-	else {
-		LOG("SUCCESS: Initialized GLAD");
-	}
-#pragma endregion
-
-	// Vertex shader referenced by an ID
-	unsigned int vertexShader;
-	// Create the shaders
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	// Vertex to compile, amounnt of strings, actual code
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
-	//Check for vertex shader errors
-	int success;
-	char infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		LOG("ERROR: Shader vertex compilation failed:\n" << infoLog);
 	} else {
-		LOG("SUCCESS: Vertex Shader compilation completed");
+		std::cout << "SUCCESS: Initialized GLAD" << std::endl;
 	}
-	
-	// Fragment shader referenced by an ID
-	unsigned int fragmentShader;
-	// Set the fragment shader type to GL_FRAGMENT_SHADER
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	// Fragment shader to compile, amounnt of strings, actual code
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
 
-	// Triangle verticies
+	// Build and compile our shader program
+	Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl", debug);
+
+	// set up vertex data (and buffer(s)) and configure vertex attributes
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.0f, 0.5f, 0.0f
+		// positions          // colors           // texture coords
+		0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
+		0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
+		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
 	};
-	// Vertex Buffer Object, stores verticies
-	unsigned int VBO;
-	// Generate the buffer
+
+	unsigned int indices[] = {
+		0, 1, 3, // first triangle
+		1, 2, 3  // second triangle
+	};
+
+	// Create variables to store the IDs of the VAO, VBO 
+	unsigned int VBO, VAO;
+
+	// Create the IDs and put them into the VAO, VBO
+	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
-	// Bind the VBO to the vertex buffer type "GL_ARRAY_BUFFER"
+
+	// Nind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+	glBindVertexArray(VAO);
+
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	// Copy the data to the buffers memory for the currently bound GL_ARRAY_BUFFER
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	// While GLFW is not being told to close, run this loop
+	/*
+	In vertex.glsl, we say that our aPos attrib location is 0, and since we are dealing with
+	position we input 0. We set the aPos to a vec3 which has 3 attributes. The data we are 
+	inputting is a float. We do not want our data to be normalized. We have 6 pieces of data
+	per vertex, so our stride is 6*so(float). Offset of where the pos data begins (none)
+	*/
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	/*
+	In vertex.glsl, we say that our aColor attrib location is 1, and since we are dealing 
+	with color we input 0. We set the aColor to a vec3 which has 3 attributes. The data we 
+	are inputting is a float. We do not want our data to be normalized. We have 6 pieces of 
+	data per vertex, so our stride is 6*so(float). Offset of where the color data begins is 
+	3 floats after the beginning of the array 
+	*/
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+	// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+	// glBindVertexArray(0);
+
+	// Render loop
 	while (!glfwWindowShouldClose(window))
 	{
-		// Process user input for this window
+		// Input
 		processInput(window);
-		// Set the clear color to blue
+
+		// Render
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		// Clear the window
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		// Swap frame buffers and poll window events
+		// Render the triangle
+		shader.use();
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		// Swap frame buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
-	// At the end of the program, terminate GLFW and therefore the window
+	// De-allocate all resources once they've outlived their purpose:
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+
+	// Terminate GLFW, clearing all previously allocated GLFW resources
 	glfwTerminate();
-	LOG("The program ran successfully, have a good day.");
+	time(&end);
+	seconds = difftime(end, start);
+	std::cout << "Time ran in seconds: " << seconds << std::endl;
 	std::cin.get();
 	return 0;
 }
 
-/*
-	FUNCTIONS
-*/
-
-// Provide information for the window
-void windowContext() 
-{
-	// Tell GLFW our OpenGL version (3.3)
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	// Tell GLFW we want to use the core GLFW profile rather than the compatibility profile
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-}
-
-// Process keyboard input for the specified window
+// Process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 void processInput(GLFWwindow *window)
 {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) 
+	{
 		glfwSetWindowShouldClose(window, true);
+	}
 }
 
-// Alter the OpenGL viewport as the window is resized
+// Whenever the window size changed (by OS or user resize) this callback function executes
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
+	//Make sure the viewport matches the new window dimensions; note that width and 
+	// NOTE: Height will be significantly larger than specified on retina displays.
 	glViewport(0, 0, width, height);
 }
