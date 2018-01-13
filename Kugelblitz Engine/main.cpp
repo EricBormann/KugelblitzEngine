@@ -1,7 +1,6 @@
 /*
 TODO:
-	Output format:
-	[21:16:55 INFO]
+	Allow input from the console that can restart, and stop. pause?
 */
 
 // Only have this file once
@@ -32,6 +31,7 @@ double seconds;
 bool debug;
 time_t start;
 time_t end;
+std::string consoleInput;
 
 // Takes in launch options, useful for debugging
 int main(int argc, char *argv[])
@@ -40,7 +40,8 @@ int main(int argc, char *argv[])
 	time(&start);  /* get current time; same as: timer = time(NULL)  */
 	// Check if debug is enabled
 	for (int i = 0; i < argc; i++) {
-		
+		// std::cout << timeFunctions.getCurrentTime() << "INFO: Launch arguments are: " << argv[i] << std::endl;
+		// printf("INFO: argv[%d]: %s\n", i, argv[i]);
 		if ((std::string) argv[i] == "-debug")
 		{
 			std::cout << timeFunctions.getCurrentTime() << "INFO: Debug enabled, all information will be printed to this console" << std::endl;
@@ -50,8 +51,8 @@ int main(int argc, char *argv[])
 			debug = true;
 			std::string str = "Kugelblitz Engine Console";
 			SetConsoleTitle(str.c_str());
-			printf("INFO: argv[%d]: %s\n", i, argv[i]);
 		}
+		
 	}
 	if (debug == false) {
 		FreeConsole();
