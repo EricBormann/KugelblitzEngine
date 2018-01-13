@@ -4,6 +4,9 @@
 // Include GLAD
 #include <glad/glad.h>
 
+// Include time for logging
+#include "time.h"
+
 // Include standard file libraries
 #include <string>
 #include <fstream>
@@ -108,6 +111,7 @@ public:
 
 private:
 	bool m_debug;
+	Time m_timeFunctions;
 	// Utility function for checking shader compilation/linking errors
 	void checkCompileErrors(unsigned int shader, std::string type)
 	{
@@ -119,9 +123,9 @@ private:
 			if (!success)
 			{
 				glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-				std::cout << "INFO: Shader compilation failed " << type << "\n" << infoLog << std::endl;
+				std::cout << m_timeFunctions.getCurrentTime() << "INFO: Shader compilation failed " << type << "\n" << infoLog << std::endl;
 			} else if (m_debug == true) {
-				std::cout << "INFO: Shader compilation succeeded" << std::endl;
+				std::cout << m_timeFunctions.getCurrentTime() << "INFO: Shader compilation succeeded" << std::endl;
 			}
 		}
 		else
@@ -130,9 +134,9 @@ private:
 			if (!success)
 			{
 				glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-				std::cout << "INFO: Shader program linking error of type: " << type << "\n" << infoLog << std::endl;
+				std::cout << m_timeFunctions.getCurrentTime() << "INFO: Shader program linking error of type: " << type << "\n" << infoLog << std::endl;
 			} else if(m_debug == true) {
-				std::cout << "INFO: Shader program linking succeeded" << std::endl;
+				std::cout << m_timeFunctions.getCurrentTime() << "INFO: Shader program linking succeeded" << std::endl;
 			}
 		}
 	}

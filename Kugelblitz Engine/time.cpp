@@ -44,7 +44,7 @@ std::string Time::getCurrentTime() {
 	int seconds = theTime->tm_sec;
 	int minutes = theTime->tm_min;
 	int hours = theTime->tm_hour;
-	std::string returnValue = "["+ std::to_string(hours) + ":" + std::to_string(minutes) + ":" + std::to_string(seconds) + "]";
+	std::string returnValue = "["+ std::to_string(hours) + ":" + std::to_string(minutes) + ":" + std::to_string(seconds) + "] ";
 	return returnValue;
 }
 

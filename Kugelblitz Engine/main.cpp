@@ -43,7 +43,10 @@ int main(int argc, char *argv[])
 		
 		if ((std::string) argv[i] == "-debug")
 		{
-			std::cout << timeFunctions.getCurrentTime() << "INFO: Debug enabled, all information will be printed to this console\nINFO: ERROR indicates fatal error, and the application will terminate\nINFO: INFO indicates useful information or non-fatal errors\nINFO: SUCCESS indicates no fatal errors occurred for that process" << std::endl;
+			std::cout << timeFunctions.getCurrentTime() << "INFO: Debug enabled, all information will be printed to this console" << std::endl;
+			std::cout << timeFunctions.getCurrentTime() << "INFO: ERROR indicates fatal error, and the application will terminate" << std::endl;
+			std::cout << timeFunctions.getCurrentTime() << "INFO: INFO indicates useful information or non-fatal errors" << std::endl;
+			std::cout << timeFunctions.getCurrentTime() << "INFO: SUCCESS indicates no fatal errors occurred for that process" << std::endl;
 			debug = true;
 			std::string str = "Kugelblitz Engine Console";
 			SetConsoleTitle(str.c_str());
