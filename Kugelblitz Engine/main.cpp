@@ -14,13 +14,13 @@ TODO:
 // Include needed stuff
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "stb_image.h""
+#include "stb_image.h"
 
 #include "shader.h"
+#include "time.h"
 
 #include <windows.h>
 #include <iostream>
-#include <ctime>
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -36,18 +36,14 @@ time_t end;
 // Takes in launch options, useful for debugging
 int main(int argc, char *argv[])
 {
-	struct tm *theTime;
-	time_t tim;
-	time(&tim);
-	theTime = localtime(&tim);
-	int hours = theTime->tm_hour;
-
+	Time timeFunctions;
 	time(&start);  /* get current time; same as: timer = time(NULL)  */
 	// Check if debug is enabled
 	for (int i = 0; i < argc; i++) {
+		
 		if ((std::string) argv[i] == "-debug")
 		{
-			std::cout << "INFO: Debug enabled, all information will be printed to this console\nINFO: ERROR indicates fatal error, and the application will terminate\nINFO: INFO indicates useful information or non-fatal errors\nINFO: SUCCESS indicates no fatal errors occurred for that process" << std::endl;
+			std::cout << timeFunctions.getCurrentTime() << "INFO: Debug enabled, all information will be printed to this console\nINFO: ERROR indicates fatal error, and the application will terminate\nINFO: INFO indicates useful information or non-fatal errors\nINFO: SUCCESS indicates no fatal errors occurred for that process" << std::endl;
 			debug = true;
 			std::string str = "Kugelblitz Engine Console";
 			SetConsoleTitle(str.c_str());
@@ -76,12 +72,12 @@ int main(int argc, char *argv[])
 		return -1;
 	} else if (window == NULL && debug == true) {
 		// Output the GLFW error, and terminate the program
-		std::cout << "ERROR: Failed to create GLFW window" << std::endl;
+		std::cout << timeFunctions.getCurrentTime() << "ERROR: Failed to create GLFW window" << std::endl;
 		glfwTerminate();
 		std::cin.get();
 		return -1;
 	} else {
-		std::cout << "SUCCESS: GLFW window created" << std::endl;
+		std::cout << timeFunctions.getCurrentTime() << "SUCCESS: GLFW window created" << std::endl;
 	}
 	// Make the OpenGL context the current window
 	glfwMakeContextCurrent(window);
@@ -91,11 +87,11 @@ int main(int argc, char *argv[])
 	// GLAD: load all OpenGL function pointers
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
-		std::cout << "ERROR: Failed to initialize GLAD" << std::endl;
+		std::cout << timeFunctions.getCurrentTime() << "ERROR: Failed to initialize GLAD" << std::endl;
 		std::cin.get();
 		return -1;
 	} else {
-		std::cout << "SUCCESS: Initialized GLAD" << std::endl;
+		std::cout << timeFunctions.getCurrentTime() << "SUCCESS: Initialized GLAD" << std::endl;
 	}
 
 	// Build and compile our shader program
@@ -178,7 +174,7 @@ int main(int argc, char *argv[])
 	glfwTerminate();
 	time(&end);
 	seconds = difftime(end, start);
-	std::cout << "Time ran in seconds: " << seconds << std::endl;
+	std::cout << timeFunctions.getCurrentTime() << "Time ran in seconds: " << seconds << std::endl;
 	std::cin.get();
 	return 0;
 }
