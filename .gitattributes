@@ -72,4 +72,6 @@
 # These files are text and should be normalized (Convert crlf => lf)
 
 #
-KugelblitzEngine/glad.c* linguist-vendored
+glad.c linguist-vendored=true
+glfw3.h linguist-vendored=true
+glad.h linguist-vendored=true
